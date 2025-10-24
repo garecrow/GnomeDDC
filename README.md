@@ -12,7 +12,6 @@ excellent fit for Fedora 41–43.
 - Adjust brightness and contrast with smooth, Adwaita-styled sliders
 - Switch between available input sources when supported by the monitor
 - Responsive, asynchronous UI that avoids blocking the GNOME Shell
-- Quick refresh button to rescan displays without restarting the app
 - Built with modern Libadwaita widgets and follows GNOME’s Human Interface Guidelines
 
 ## Requirements

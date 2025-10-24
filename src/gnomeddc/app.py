@@ -296,13 +296,6 @@ class GnomeDDCWindow(Adw.ApplicationWindow):
         header = Adw.HeaderBar()
         title = Adw.WindowTitle(title="GnomeDDC", subtitle=f"Version {__version__}")
         header.set_title_widget(title)
-
-        self._refresh_button: Gtk.Button = Gtk.Button()
-        self._refresh_button.set_child(Gtk.Image.new_from_icon_name("view-refresh-symbolic"))
-        self._refresh_button.set_tooltip_text("Rescan for connected monitors")
-        self._refresh_button.connect("clicked", self._on_refresh_button_clicked)
-        header.pack_end(self._refresh_button)
-
         toolbar_view.add_top_bar(header)
 
         self.split_view = Adw.NavigationSplitView()
@@ -317,21 +310,13 @@ class GnomeDDCWindow(Adw.ApplicationWindow):
 
         self.content_stack = Gtk.Stack()
         self.content_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-
-        self._status_page = self._create_status_page("Searching for monitors…")
-        self.content_stack.add_named(self._status_page, "status")
-
-        self._placeholder_page = self._create_status_page(
-            "Select a monitor to begin", icon="video-display-symbolic"
+        self.content_stack.add_named(self._create_status_page("Searching for monitors…"), "status")
+        self.content_stack.add_named(
+            self._create_status_page("Select a monitor to begin", icon="video-display-symbolic"),
+            "placeholder",
         )
-        self.content_stack.add_named(self._placeholder_page, "placeholder")
-
-        self._error_page: Adw.StatusPage | None = None
-        self._empty_page: Adw.StatusPage | None = None
-
         self.split_view.set_content(Adw.NavigationPage.new(self.content_stack, "Controls"))
 
-        self._set_refresh_sensitive(True)
         self._load_monitors()
 
     def _create_status_page(
@@ -345,19 +330,17 @@ class GnomeDDCWindow(Adw.ApplicationWindow):
         return page
 
     def _load_monitors(self) -> None:
-        self._set_refresh_sensitive(False)
         self.content_stack.set_visible_child_name("status")
 
         def finish(result: Optional[List[DisplayInfo]], error: Optional[BaseException]) -> None:
-            self._set_refresh_sensitive(True)
             if error:
                 LOG.error("Failed to list monitors: %s", error)
-                page = self._ensure_status_page(
-                    "error",
+                page = self._create_status_page(
                     "Unable to detect monitors",
                     str(error),
-                    "dialog-error-symbolic",
+                    icon="dialog-error-symbolic",
                 )
+                self.content_stack.add_named(page, "error")
                 self.content_stack.set_visible_child_name("error")
                 return
             assert result is not None
@@ -365,43 +348,15 @@ class GnomeDDCWindow(Adw.ApplicationWindow):
             if result:
                 self.content_stack.set_visible_child_name("placeholder")
             else:
-                empty_page = self._ensure_status_page(
-                    "empty",
+                empty_page = self._create_status_page(
                     "No monitors found",
                     "Ensure your display supports DDC/CI and that ddcutil has permission to access it.",
-                    "dialog-warning-symbolic",
+                    icon="dialog-warning-symbolic",
                 )
+                self.content_stack.add_named(empty_page, "empty")
                 self.content_stack.set_visible_child_name("empty")
 
         self.runner.run(list_displays, finish)
-
-    def _ensure_status_page(
-        self, name: str, title: str, description: str, icon: str
-    ) -> Adw.StatusPage:
-        if name == "error":
-            if self._error_page is None:
-                self._error_page = self._create_status_page(title, description, icon)
-                self.content_stack.add_named(self._error_page, name)
-            else:
-                self._update_status_page(self._error_page, title, description, icon)
-            return self._error_page
-        if name == "empty":
-            if self._empty_page is None:
-                self._empty_page = self._create_status_page(title, description, icon)
-                self.content_stack.add_named(self._empty_page, name)
-            else:
-                self._update_status_page(self._empty_page, title, description, icon)
-            return self._empty_page
-        page = self._create_status_page(title, description, icon)
-        self.content_stack.add_named(page, name)
-        return page
-
-    def _update_status_page(
-        self, page: Adw.StatusPage, title: str, description: str, icon: str
-    ) -> None:
-        page.set_title(title)
-        page.set_description(description)
-        page.set_icon_name(icon)
 
     def _populate_monitor_list(self, displays: List[DisplayInfo]) -> None:
         for child in list(self.monitor_list.get_children()):
@@ -411,12 +366,6 @@ class GnomeDDCWindow(Adw.ApplicationWindow):
         for display in displays:
             row = MonitorRow(display)
             self.monitor_list.append(row)
-
-    def _set_refresh_sensitive(self, enabled: bool) -> None:
-        self._refresh_button.set_sensitive(enabled)
-
-    def _on_refresh_button_clicked(self, _button: Gtk.Button) -> None:
-        self._load_monitors()
 
     def _on_monitor_selected(self, _box: Gtk.ListBox, row: Optional[MonitorRow]) -> None:
         if row is None:
