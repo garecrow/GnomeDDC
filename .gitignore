@@ -1,9 +1,6 @@
 __pycache__/
 build/
-dist/
 *.pyc
 *.pyo
 *.pyd
 *.swp
-*.tar.gz
-*.src.rpm
