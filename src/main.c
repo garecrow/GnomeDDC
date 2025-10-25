@@ -95,7 +95,7 @@ static void on_list_item_setup(GtkSignalListItemFactory *factory, GtkListItem *i
 static void on_list_item_bind(GtkSignalListItemFactory *factory, GtkListItem *item, gpointer user_data) {
     AdwActionRow *row = ADW_ACTION_ROW(gtk_list_item_get_child(item));
     MonitorItem *monitor = MONITOR_ITEM(gtk_list_item_get_item(item));
-    adw_action_row_set_title(row, monitor_item_get_name(monitor));
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(row), monitor_item_get_name(monitor));
     const gchar *bus = monitor_item_get_bus(monitor);
     adw_action_row_set_subtitle(row, (bus && *bus) ? bus : "");
 }
@@ -142,7 +142,7 @@ static GtkWidget *build_detail_panel(AppWindow *self) {
     gtk_widget_set_valign(GTK_WIDGET(self->brightness_scale), GTK_ALIGN_CENTER);
 
     AdwActionRow *brightness_row = ADW_ACTION_ROW(adw_action_row_new());
-    adw_action_row_set_title(brightness_row, "Brightness");
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(brightness_row), "Brightness");
     adw_action_row_add_suffix(brightness_row, GTK_WIDGET(self->brightness_scale));
     gtk_widget_set_hexpand(GTK_WIDGET(brightness_row), TRUE);
 
@@ -160,11 +160,11 @@ static GtkWidget *build_detail_panel(AppWindow *self) {
     adw_preferences_group_set_title(ADW_PREFERENCES_GROUP(info_group), "Details");
 
     self->bus_row = ADW_ACTION_ROW(adw_action_row_new());
-    adw_action_row_set_title(self->bus_row, "I2C bus");
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(self->bus_row), "I2C bus");
     adw_preferences_group_add(ADW_PREFERENCES_GROUP(info_group), GTK_WIDGET(self->bus_row));
 
     self->serial_row = ADW_ACTION_ROW(adw_action_row_new());
-    adw_action_row_set_title(self->serial_row, "Serial number");
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(self->serial_row), "Serial number");
     adw_preferences_group_add(ADW_PREFERENCES_GROUP(info_group), GTK_WIDGET(self->serial_row));
 
     gtk_box_append(GTK_BOX(detail_box), info_group);
@@ -207,12 +207,9 @@ static void app_window_show_monitor(AppWindow *self, MonitorItem *item) {
         return;
     }
 
-    GtkAdjustment *adjustment = gtk_range_get_adjustment(GTK_RANGE(self->brightness_scale));
     self->updating_slider = TRUE;
-    gtk_adjustment_set_lower(adjustment, 0);
-    gtk_adjustment_set_upper(adjustment, maximum);
-    gtk_adjustment_set_value(adjustment, current);
-    gtk_adjustment_changed(adjustment);
+    gtk_range_set_range(GTK_RANGE(self->brightness_scale), 0, maximum);
+    gtk_range_set_value(GTK_RANGE(self->brightness_scale), current);
     self->updating_slider = FALSE;
 }
 
@@ -251,7 +248,7 @@ static void app_window_refresh(AppWindow *self) {
     gtk_single_selection_set_selected(self->selection, 0);
 }
 
-static AppWindow *app_window_new(AdwApplication *app) {
+static AppWindow *app_window_new(GtkApplication *app) {
     AppWindow *self = g_new0(AppWindow, 1);
 
     self->window = ADW_APPLICATION_WINDOW(adw_application_window_new(app));
@@ -280,7 +277,7 @@ static AppWindow *app_window_new(AdwApplication *app) {
     GtkWidget *split_view = adw_navigation_split_view_new();
     adw_navigation_split_view_set_sidebar_width_fraction(ADW_NAVIGATION_SPLIT_VIEW(split_view), 0.28);
 
-    GtkWidget *sidebar_page = adw_navigation_page_new(build_list_view(self), "Displays");
+    AdwNavigationPage *sidebar_page = adw_navigation_page_new(build_list_view(self), "Displays");
     adw_navigation_split_view_set_sidebar(ADW_NAVIGATION_SPLIT_VIEW(split_view), sidebar_page);
 
     self->content_stack = GTK_STACK(gtk_stack_new());
@@ -293,7 +290,7 @@ static AppWindow *app_window_new(AdwApplication *app) {
     GtkWidget *detail_panel = build_detail_panel(self);
     gtk_stack_add_named(self->content_stack, detail_panel, "detail");
 
-    GtkWidget *content_page = adw_navigation_page_new(GTK_WIDGET(self->content_stack), "Details");
+    AdwNavigationPage *content_page = adw_navigation_page_new(GTK_WIDGET(self->content_stack), "Details");
     adw_navigation_split_view_set_content(ADW_NAVIGATION_SPLIT_VIEW(split_view), content_page);
 
     adw_toolbar_view_set_content(ADW_TOOLBAR_VIEW(toolbar_view), split_view);
@@ -307,13 +304,13 @@ static AppWindow *app_window_new(AdwApplication *app) {
 }
 
 static void on_activate(GtkApplication *app, gpointer user_data) {
-    AppWindow *window_state = app_window_new(ADW_APPLICATION(app));
+    AppWindow *window_state = app_window_new(app);
     app_window_refresh(window_state);
     gtk_window_present(GTK_WINDOW(window_state->window));
 }
 
 int main(int argc, char *argv[]) {
-    g_autoptr(AdwApplication) app = adw_application_new("dev.gnomeddc", G_APPLICATION_FLAGS_NONE);
+    g_autoptr(AdwApplication) app = adw_application_new("dev.gnomeddc", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
     return g_application_run(G_APPLICATION(app), argc, argv);
 }

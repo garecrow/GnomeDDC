@@ -8,8 +8,17 @@ static gboolean run_ddcutil(const gchar *const *argv, gchar **stdout_str, GError
     gchar *standard_error = NULL;
     gint status = 0;
 
+    g_auto(GStrv) spawn_argv = g_strdupv((gchar **)argv);
+    if (!spawn_argv) {
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_FAILED,
+                    "Failed to allocate argument vector for ddcutil");
+        return FALSE;
+    }
+
     if (!g_spawn_sync(NULL,
-                      (gchar *const *)argv,
+                      spawn_argv,
                       NULL,
                       G_SPAWN_SEARCH_PATH,
                       NULL,
@@ -23,7 +32,7 @@ static gboolean run_ddcutil(const gchar *const *argv, gchar **stdout_str, GError
         return FALSE;
     }
 
-    if (!g_spawn_check_exit_status(status, error)) {
+    if (!g_spawn_check_wait_status(status, error)) {
         if (standard_output) {
             g_free(standard_output);
         }
