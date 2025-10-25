@@ -361,7 +361,7 @@ static AppWindow *app_window_new(GtkApplication *app) {
 
     self->monitor_store = g_list_store_new(MONITOR_TYPE_ITEM);
     self->selection = GTK_SINGLE_SELECTION(gtk_single_selection_new(G_LIST_MODEL(self->monitor_store)));
-    gtk_single_selection_set_autoselect(self->selection, TRUE);
+    gtk_single_selection_set_autoselect(self->selection, FALSE);
     gtk_single_selection_set_can_unselect(self->selection, FALSE);
     g_signal_connect(self->selection, "notify::selected-item", G_CALLBACK(on_selection_changed), self);
     self->brightness_max = 100;
@@ -376,13 +376,14 @@ static AppWindow *app_window_new(GtkApplication *app) {
     GtkWidget *title_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_set_hexpand(title_box, TRUE);
 
-    GtkWidget *page_title = gtk_label_new("Displays");
-    gtk_widget_add_css_class(page_title, "title-5");
+    GtkWidget *page_title = gtk_label_new("GnomeDDC");
+    gtk_widget_add_css_class(page_title, "title-6");
     gtk_widget_add_css_class(page_title, "gnomeddc-page-title");
     gtk_widget_set_halign(page_title, GTK_ALIGN_END);
     gtk_widget_set_margin_end(page_title, 12);
     gtk_box_append(GTK_BOX(title_box), page_title);
 
+    gtk_widget_add_css_class(header_bar, "gnomeddc-header-bar");
     adw_header_bar_set_title_widget(ADW_HEADER_BAR(header_bar), title_box);
 
     self->refresh_button = GTK_BUTTON(gtk_button_new_from_icon_name("view-refresh-symbolic"));
@@ -390,9 +391,11 @@ static AppWindow *app_window_new(GtkApplication *app) {
     adw_header_bar_pack_end(ADW_HEADER_BAR(header_bar), GTK_WIDGET(self->refresh_button));
     g_signal_connect(self->refresh_button, "clicked", G_CALLBACK(on_refresh_clicked), self);
 
+    gtk_widget_add_css_class(toolbar_view, "gnomeddc-toolbar-view");
     adw_toolbar_view_add_top_bar(ADW_TOOLBAR_VIEW(toolbar_view), header_bar);
 
     GtkWidget *split_view = adw_navigation_split_view_new();
+    gtk_widget_add_css_class(split_view, "gnomeddc-split-view");
     adw_navigation_split_view_set_sidebar_width_fraction(ADW_NAVIGATION_SPLIT_VIEW(split_view), 0.28);
 
     AdwNavigationPage *sidebar_page = adw_navigation_page_new(build_sidebar(self), "Displays");
@@ -457,6 +460,13 @@ static void ensure_app_styles(void) {
             "}"
             ".gnomeddc-window .gnomeddc-sidebar-title {"
             "  font-weight: 600;"
+            "}"
+            ".gnomeddc-window .gnomeddc-toolbar-view {"
+            "  background-color: transparent;"
+            "}"
+            ".gnomeddc-window .gnomeddc-header-bar {"
+            "  background-color: transparent;"
+            "  box-shadow: none;"
             "}"
             ".gnomeddc-window .gnomeddc-page-title {"
             "  font-weight: 600;"
