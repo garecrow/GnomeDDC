@@ -1,39 +1,68 @@
 # GnomeDDC
 
-GnomeDDC is a native Libadwaita interface for [ddcutil](https://www.ddcutil.com/) that
-lets you control external monitor settings such as brightness, contrast, and input
-sources directly from GNOME. The application is written with GTK 4 / Libadwaita and
-is designed to run seamlessly on Wayland systems with an X11 fallback, making it an
-excellent fit for Fedora 41–43.
+GnomeDDC is a native GTK 4 and Libadwaita application for Fedora that presents a
+simple control panel for DDC/CI capable monitors using the `ddcutil` command line
+tool. The project is written in C and built with CMake to align with Fedora's
+packaging guidelines.
 
 ## Features
 
-- Discover all DDC/CI capable displays using `ddcutil`
-- Adjust brightness and contrast with smooth, Adwaita-styled sliders
-- Switch between available input sources when supported by the monitor
-- Responsive, asynchronous UI that avoids blocking the GNOME Shell
-- Built with modern Libadwaita widgets and follows GNOME’s Human Interface Guidelines
+- Discover DDC/CI monitors through `ddcutil detect --brief`
+- Display per-monitor metadata such as I²C bus and serial number
+- Adjust brightness using a Libadwaita-styled slider
+- Refresh the display list with a single toolbar action
 
-## Requirements
+## Build requirements
 
-- Fedora 41 or newer (other Wayland-based distributions should also work)
-- Python 3.11+
-- `ddcutil` command line tool installed and accessible to the user
-- GTK 4, Libadwaita, and PyGObject libraries
+### Fedora
 
-## Running from source
+The following packages are required to build and run GnomeDDC on Fedora:
+
+- `cmake`
+- `gcc`
+- `pkgconf-pkg-config`
+- `gtk4-devel`
+- `libadwaita-devel`
+- `ddcutil` (runtime dependency)
+
+### Debian / Ubuntu
+
+The project also builds cleanly on Debian-based distributions with the
+following packages installed:
+
+- `build-essential`
+- `cmake`
+- `pkg-config`
+- `libgtk-4-dev`
+- `libadwaita-1-dev`
+- `libddcutil-dev`
+
+## Building and running
 
 ```bash
-pip install --user .
-gnomeddc
+cmake -S . -B build
+cmake --build build
+make -C build
+./build/gnomeddc
 ```
 
-While running the app you may increase verbosity by passing `-v` (info) or `-vv` (debug).
+On systems without an available display server (such as continuous
+integration runners) you can still verify the binary launches by running:
 
-## Developing
+```bash
+./build/gnomeddc --help
+```
 
-The `gnomeddc` package is organised as a modern Python project that uses GTK 4 and
-Libadwaita. All long-running `ddcutil` calls are executed in worker threads so the UI
-remains responsive. The project aims to provide a GNOME-first experience compared to
-Qt-based alternatives.
+GnomeDDC communicates with `ddcutil`, so make sure your user is allowed to access
+`/dev/i2c-*` devices. On Fedora this typically means adding your user to the
+`i2c` group and re-logging.
 
+## Project structure
+
+- `CMakeLists.txt` — project configuration
+- `src/main.c` — Libadwaita application and interface logic
+- `src/ddcutil_client.c` — helpers that wrap `ddcutil` CLI calls
+- `src/monitor_item.c` — boxed GObject used by the list model
+
+Contributions are welcome! Please follow GNOME's C formatting guidelines and keep
+new UI elements consistent with the rest of the application.
