@@ -23,6 +23,8 @@ typedef struct {
 static void app_window_refresh(AppWindow *self);
 static void app_window_show_monitor(AppWindow *self, MonitorItem *item);
 static void app_window_set_feedback(AppWindow *self, const gchar *message);
+static void on_prefer_dark_changed(GObject *settings, GParamSpec *pspec, gpointer user_data);
+static void update_color_scheme(AdwApplication *app);
 
 static void app_window_free(AppWindow *self) {
     if (!self) {
@@ -88,16 +90,44 @@ static void on_brightness_value_changed(GtkRange *range, gpointer user_data) {
 }
 
 static void on_list_item_setup(GtkSignalListItemFactory *factory, GtkListItem *item, gpointer user_data) {
-    AdwActionRow *row = ADW_ACTION_ROW(adw_action_row_new());
-    gtk_list_item_set_child(item, GTK_WIDGET(row));
+    GtkWidget *row = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    gtk_widget_add_css_class(row, "navigation-sidebar-item");
+    gtk_widget_set_margin_top(row, 12);
+    gtk_widget_set_margin_bottom(row, 12);
+    gtk_widget_set_margin_start(row, 18);
+    gtk_widget_set_margin_end(row, 18);
+
+    GtkWidget *title = gtk_label_new("");
+    gtk_widget_add_css_class(title, "title-4");
+    gtk_label_set_xalign(GTK_LABEL(title), 0.0f);
+    gtk_box_append(GTK_BOX(row), title);
+
+    GtkWidget *subtitle = gtk_label_new("");
+    gtk_widget_add_css_class(subtitle, "dim-label");
+    gtk_label_set_xalign(GTK_LABEL(subtitle), 0.0f);
+    gtk_box_append(GTK_BOX(row), subtitle);
+
+    g_object_set_data(G_OBJECT(row), "title", title);
+    g_object_set_data(G_OBJECT(row), "subtitle", subtitle);
+
+    gtk_list_item_set_child(item, row);
 }
 
 static void on_list_item_bind(GtkSignalListItemFactory *factory, GtkListItem *item, gpointer user_data) {
-    AdwActionRow *row = ADW_ACTION_ROW(gtk_list_item_get_child(item));
+    GtkWidget *row = gtk_list_item_get_child(item);
+    GtkLabel *title = GTK_LABEL(g_object_get_data(G_OBJECT(row), "title"));
+    GtkLabel *subtitle = GTK_LABEL(g_object_get_data(G_OBJECT(row), "subtitle"));
     MonitorItem *monitor = MONITOR_ITEM(gtk_list_item_get_item(item));
-    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(row), monitor_item_get_name(monitor));
+
+    gtk_label_set_text(title, monitor_item_get_name(monitor));
+
     const gchar *bus = monitor_item_get_bus(monitor);
-    adw_action_row_set_subtitle(row, (bus && *bus) ? bus : "");
+    if (bus && *bus) {
+        gtk_label_set_text(subtitle, bus);
+        gtk_widget_set_visible(GTK_WIDGET(subtitle), TRUE);
+    } else {
+        gtk_widget_set_visible(GTK_WIDGET(subtitle), FALSE);
+    }
 }
 
 static GtkWidget *build_list_view(AppWindow *self) {
@@ -108,6 +138,7 @@ static GtkWidget *build_list_view(AppWindow *self) {
     GtkListView *list_view = GTK_LIST_VIEW(gtk_list_view_new(GTK_SELECTION_MODEL(self->selection), factory));
     gtk_list_view_set_single_click_activate(list_view, TRUE);
     gtk_list_view_set_show_separators(list_view, TRUE);
+    gtk_widget_add_css_class(GTK_WIDGET(list_view), "navigation-sidebar");
 
     GtkWidget *scrolled = gtk_scrolled_window_new();
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled), GTK_WIDGET(list_view));
@@ -294,7 +325,7 @@ static AppWindow *app_window_new(GtkApplication *app) {
     adw_navigation_split_view_set_content(ADW_NAVIGATION_SPLIT_VIEW(split_view), content_page);
 
     adw_toolbar_view_set_content(ADW_TOOLBAR_VIEW(toolbar_view), split_view);
-    gtk_window_set_child(GTK_WINDOW(self->window), toolbar_view);
+    adw_application_window_set_content(self->window, toolbar_view);
 
     g_object_set_data_full(G_OBJECT(self->window), "app-window-state", self, (GDestroyNotify)app_window_free);
 
@@ -309,8 +340,34 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
     gtk_window_present(GTK_WINDOW(window_state->window));
 }
 
+static void update_color_scheme(AdwApplication *app) {
+    GtkSettings *settings = gtk_settings_get_default();
+    if (!settings) {
+        return;
+    }
+
+    gboolean prefer_dark = FALSE;
+    g_object_get(settings, "gtk-application-prefer-dark-theme", &prefer_dark, NULL);
+
+    AdwStyleManager *style_manager = adw_application_get_style_manager(app);
+    adw_style_manager_set_color_scheme(style_manager, prefer_dark ? ADW_COLOR_SCHEME_PREFER_DARK : ADW_COLOR_SCHEME_DEFAULT);
+
+    if (prefer_dark) {
+        g_object_set(settings, "gtk-application-prefer-dark-theme", FALSE, NULL);
+    }
+}
+
+static void on_prefer_dark_changed(GObject *settings, GParamSpec *pspec, gpointer user_data) {
+    update_color_scheme(ADW_APPLICATION(user_data));
+}
+
 int main(int argc, char *argv[]) {
     g_autoptr(AdwApplication) app = adw_application_new("dev.gnomeddc", G_APPLICATION_DEFAULT_FLAGS);
+    update_color_scheme(app);
+    GtkSettings *settings = gtk_settings_get_default();
+    if (settings) {
+        g_signal_connect(settings, "notify::gtk-application-prefer-dark-theme", G_CALLBACK(on_prefer_dark_changed), app);
+    }
     g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
     return g_application_run(G_APPLICATION(app), argc, argv);
 }
