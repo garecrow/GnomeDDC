@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=GnomeDDC
-Comment=Control external monitors with ddcutil
-Exec=gnomeddc
-Terminal=false
-Type=Application
-Categories=GNOME;GTK;Settings;HardwareSettings;
-Icon=video-display
