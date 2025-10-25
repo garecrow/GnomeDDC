@@ -28,6 +28,7 @@ static void app_window_set_feedback(AppWindow *self, const gchar *message);
 static void app_window_update_brightness_label(AppWindow *self, gdouble value);
 static void on_prefer_dark_changed(GObject *settings, GParamSpec *pspec, gpointer user_data);
 static void update_color_scheme(AdwApplication *app);
+static void ensure_app_styles(void);
 
 static void app_window_free(AppWindow *self) {
     if (!self) {
@@ -176,16 +177,17 @@ static GtkWidget *build_list_view(AppWindow *self) {
 static GtkWidget *build_sidebar(AppWindow *self) {
     GtkWidget *sidebar = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_add_css_class(sidebar, "navigation-sidebar");
-    gtk_widget_add_css_class(sidebar, "background");
+    gtk_widget_add_css_class(sidebar, "gnomeddc-sidebar");
 
     GtkWidget *title_wrapper = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
-    gtk_widget_set_margin_top(title_wrapper, 24);
+    gtk_widget_set_margin_top(title_wrapper, 18);
     gtk_widget_set_margin_bottom(title_wrapper, 18);
     gtk_widget_set_margin_start(title_wrapper, 24);
     gtk_widget_set_margin_end(title_wrapper, 24);
 
     GtkWidget *app_title = gtk_label_new("GnomeDDC");
-    gtk_widget_add_css_class(app_title, "title-1");
+    gtk_widget_add_css_class(app_title, "title-3");
+    gtk_widget_add_css_class(app_title, "gnomeddc-sidebar-title");
     gtk_widget_set_halign(app_title, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(app_title, GTK_ALIGN_CENTER);
     gtk_box_append(GTK_BOX(title_wrapper), app_title);
@@ -225,28 +227,25 @@ static GtkWidget *build_detail_panel(AppWindow *self) {
     gtk_widget_set_hexpand(GTK_WIDGET(self->brightness_scale), TRUE);
     gtk_widget_set_valign(GTK_WIDGET(self->brightness_scale), GTK_ALIGN_CENTER);
 
-    GtkWidget *brightness_label = gtk_label_new("Brightness");
-    gtk_widget_add_css_class(brightness_label, "title-4");
-    gtk_widget_set_valign(brightness_label, GTK_ALIGN_CENTER);
-    gtk_widget_set_halign(brightness_label, GTK_ALIGN_START);
-
     self->brightness_value_label = GTK_LABEL(gtk_label_new("0%"));
     gtk_widget_add_css_class(GTK_WIDGET(self->brightness_value_label), "dim-label");
+    gtk_widget_add_css_class(GTK_WIDGET(self->brightness_value_label), "gnomeddc-brightness-value");
     gtk_widget_set_valign(GTK_WIDGET(self->brightness_value_label), GTK_ALIGN_CENTER);
     gtk_widget_set_halign(GTK_WIDGET(self->brightness_value_label), GTK_ALIGN_END);
 
-    GtkWidget *brightness_content = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
-    gtk_widget_set_hexpand(brightness_content, TRUE);
+    GtkWidget *brightness_suffix = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_widget_add_css_class(brightness_suffix, "gnomeddc-brightness-suffix");
+    gtk_widget_set_hexpand(brightness_suffix, TRUE);
+    gtk_widget_set_halign(brightness_suffix, GTK_ALIGN_FILL);
 
-    gtk_box_append(GTK_BOX(brightness_content), brightness_label);
-    gtk_box_append(GTK_BOX(brightness_content), GTK_WIDGET(self->brightness_scale));
-
-    gtk_widget_set_hexpand(GTK_WIDGET(self->brightness_value_label), FALSE);
-    gtk_box_append(GTK_BOX(brightness_content), GTK_WIDGET(self->brightness_value_label));
+    gtk_box_append(GTK_BOX(brightness_suffix), GTK_WIDGET(self->brightness_scale));
+    gtk_box_append(GTK_BOX(brightness_suffix), GTK_WIDGET(self->brightness_value_label));
 
     AdwActionRow *brightness_row = ADW_ACTION_ROW(adw_action_row_new());
     gtk_widget_add_css_class(GTK_WIDGET(brightness_row), "flat");
-    adw_action_row_add_suffix(brightness_row, brightness_content);
+    g_object_set(brightness_row, "activatable", FALSE, NULL);
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(brightness_row), "Brightness");
+    adw_action_row_add_suffix(brightness_row, brightness_suffix);
     gtk_widget_set_hexpand(GTK_WIDGET(brightness_row), TRUE);
 
     GtkWidget *controls_group = adw_preferences_group_new();
@@ -367,16 +366,21 @@ static AppWindow *app_window_new(GtkApplication *app) {
     g_signal_connect(self->selection, "notify::selected-item", G_CALLBACK(on_selection_changed), self);
     self->brightness_max = 100;
 
+    ensure_app_styles();
+    gtk_widget_add_css_class(GTK_WIDGET(self->window), "gnomeddc-window");
+
     GtkWidget *toolbar_view = adw_toolbar_view_new();
     GtkWidget *header_bar = adw_header_bar_new();
+    gtk_widget_add_css_class(header_bar, "flat");
 
     GtkWidget *title_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_set_hexpand(title_box, TRUE);
 
     GtkWidget *page_title = gtk_label_new("Displays");
-    gtk_widget_add_css_class(page_title, "title-4");
+    gtk_widget_add_css_class(page_title, "title-5");
+    gtk_widget_add_css_class(page_title, "gnomeddc-page-title");
     gtk_widget_set_halign(page_title, GTK_ALIGN_END);
-    gtk_widget_set_margin_end(page_title, 6);
+    gtk_widget_set_margin_end(page_title, 12);
     gtk_box_append(GTK_BOX(title_box), page_title);
 
     adw_header_bar_set_title_widget(ADW_HEADER_BAR(header_bar), title_box);
@@ -442,6 +446,42 @@ static void update_color_scheme(AdwApplication *app) {
 
 static void on_prefer_dark_changed(GObject *settings, GParamSpec *pspec, gpointer user_data) {
     update_color_scheme(ADW_APPLICATION(user_data));
+}
+
+static void ensure_app_styles(void) {
+    static gsize initialized = 0;
+    if (g_once_init_enter(&initialized)) {
+        const gchar *css =
+            ".gnomeddc-window .gnomeddc-sidebar {"
+            "  background-color: @sidebar_bg_color;"
+            "}"
+            ".gnomeddc-window .gnomeddc-sidebar-title {"
+            "  font-weight: 600;"
+            "}"
+            ".gnomeddc-window .gnomeddc-page-title {"
+            "  font-weight: 600;"
+            "}"
+            ".gnomeddc-window .gnomeddc-brightness-suffix {"
+            "  min-width: 320px;"
+            "}"
+            ".gnomeddc-window .gnomeddc-brightness-suffix scale {"
+            "  margin-inline-end: 8px;"
+            "}"
+            ".gnomeddc-window .gnomeddc-brightness-value {"
+            "  min-width: 3em;"
+            "  text-align: right;"
+            "}";
+
+        GtkCssProvider *provider = gtk_css_provider_new();
+        gtk_css_provider_load_from_string(provider, css);
+
+        GdkDisplay *display = gdk_display_get_default();
+        if (display) {
+            gtk_style_context_add_provider_for_display(display, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+        g_object_unref(provider);
+        g_once_init_leave(&initialized, 1);
+    }
 }
 
 int main(int argc, char *argv[]) {
