@@ -10,6 +10,7 @@ typedef struct {
     GtkStack *content_stack;
     AdwStatusPage *status_page;
     GtkScale *brightness_scale;
+    GtkLabel *brightness_value_label;
     GtkLabel *title_label;
     GtkLabel *subtitle_label;
     GtkLabel *feedback_label;
@@ -18,11 +19,13 @@ typedef struct {
     GListStore *monitor_store;
     GtkSingleSelection *selection;
     gboolean updating_slider;
+    gint brightness_max;
 } AppWindow;
 
 static void app_window_refresh(AppWindow *self);
 static void app_window_show_monitor(AppWindow *self, MonitorItem *item);
 static void app_window_set_feedback(AppWindow *self, const gchar *message);
+static void app_window_update_brightness_label(AppWindow *self, gdouble value);
 static void on_prefer_dark_changed(GObject *settings, GParamSpec *pspec, gpointer user_data);
 static void update_color_scheme(AdwApplication *app);
 
@@ -60,8 +63,30 @@ static void app_window_set_feedback(AppWindow *self, const gchar *message) {
     gtk_label_set_text(self->feedback_label, message ? message : "");
 }
 
+static void app_window_update_brightness_label(AppWindow *self, gdouble value) {
+    if (!self->brightness_value_label) {
+        return;
+    }
+
+    gint max = self->brightness_max > 0 ? self->brightness_max : 100;
+    gdouble percent_value = (max > 0) ? (value * 100.0 / (gdouble)max) : 0.0;
+    if (percent_value < 0.0) {
+        percent_value = 0.0;
+    } else if (percent_value > 100.0) {
+        percent_value = 100.0;
+    }
+
+    gint percent = (gint)(percent_value + 0.5);
+    gchar *label = g_strdup_printf("%d%%", percent);
+    gtk_label_set_text(self->brightness_value_label, label);
+    g_free(label);
+}
+
 static void on_brightness_value_changed(GtkRange *range, gpointer user_data) {
     AppWindow *self = user_data;
+    gdouble value = gtk_range_get_value(range);
+    app_window_update_brightness_label(self, value);
+
     if (self->updating_slider) {
         return;
     }
@@ -72,16 +97,18 @@ static void on_brightness_value_changed(GtkRange *range, gpointer user_data) {
     }
 
     MonitorItem *item = MONITOR_ITEM(selected);
-    gint value = (gint)gtk_range_get_value(range);
+    gint new_value = (gint)value;
 
     GError *error = NULL;
-    if (!ddcutil_set_brightness(monitor_item_get_display_id(item), value, &error)) {
+    if (!ddcutil_set_brightness(monitor_item_get_display_id(item), new_value, &error)) {
         app_window_set_feedback(self, error ? error->message : "Failed to set brightness");
         if (error) {
             g_error_free(error);
         }
     } else {
-        gchar *message = g_strdup_printf("Brightness set to %d", value);
+        gint max = self->brightness_max > 0 ? self->brightness_max : 100;
+        gint percent = max > 0 ? (gint)((new_value * 100.0 / (gdouble)max) + 0.5) : new_value;
+        gchar *message = g_strdup_printf("Brightness set to %d%%", percent);
         app_window_set_feedback(self, message);
         g_free(message);
     }
@@ -146,6 +173,32 @@ static GtkWidget *build_list_view(AppWindow *self) {
     return scrolled;
 }
 
+static GtkWidget *build_sidebar(AppWindow *self) {
+    GtkWidget *sidebar = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_add_css_class(sidebar, "navigation-sidebar");
+    gtk_widget_add_css_class(sidebar, "background");
+
+    GtkWidget *title_wrapper = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_widget_set_margin_top(title_wrapper, 24);
+    gtk_widget_set_margin_bottom(title_wrapper, 18);
+    gtk_widget_set_margin_start(title_wrapper, 24);
+    gtk_widget_set_margin_end(title_wrapper, 24);
+
+    GtkWidget *app_title = gtk_label_new("GnomeDDC");
+    gtk_widget_add_css_class(app_title, "title-1");
+    gtk_widget_set_halign(app_title, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(app_title, GTK_ALIGN_CENTER);
+    gtk_box_append(GTK_BOX(title_wrapper), app_title);
+
+    gtk_box_append(GTK_BOX(sidebar), title_wrapper);
+
+    GtkWidget *list = build_list_view(self);
+    gtk_widget_set_vexpand(list, TRUE);
+    gtk_box_append(GTK_BOX(sidebar), list);
+
+    return sidebar;
+}
+
 static GtkWidget *build_detail_panel(AppWindow *self) {
     GtkWidget *detail_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 24);
     gtk_widget_set_margin_top(detail_box, 24);
@@ -167,14 +220,33 @@ static GtkWidget *build_detail_panel(AppWindow *self) {
 
     GtkAdjustment *adjustment = gtk_adjustment_new(0, 0, 100, 1, 5, 0);
     self->brightness_scale = GTK_SCALE(gtk_scale_new(GTK_ORIENTATION_HORIZONTAL, adjustment));
-    gtk_scale_set_draw_value(self->brightness_scale, TRUE);
+    gtk_scale_set_draw_value(self->brightness_scale, FALSE);
     gtk_scale_set_digits(self->brightness_scale, 0);
     gtk_widget_set_hexpand(GTK_WIDGET(self->brightness_scale), TRUE);
     gtk_widget_set_valign(GTK_WIDGET(self->brightness_scale), GTK_ALIGN_CENTER);
 
+    GtkWidget *brightness_label = gtk_label_new("Brightness");
+    gtk_widget_add_css_class(brightness_label, "title-4");
+    gtk_widget_set_valign(brightness_label, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(brightness_label, GTK_ALIGN_START);
+
+    self->brightness_value_label = GTK_LABEL(gtk_label_new("0%"));
+    gtk_widget_add_css_class(GTK_WIDGET(self->brightness_value_label), "dim-label");
+    gtk_widget_set_valign(GTK_WIDGET(self->brightness_value_label), GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(GTK_WIDGET(self->brightness_value_label), GTK_ALIGN_END);
+
+    GtkWidget *brightness_content = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_widget_set_hexpand(brightness_content, TRUE);
+
+    gtk_box_append(GTK_BOX(brightness_content), brightness_label);
+    gtk_box_append(GTK_BOX(brightness_content), GTK_WIDGET(self->brightness_scale));
+
+    gtk_widget_set_hexpand(GTK_WIDGET(self->brightness_value_label), FALSE);
+    gtk_box_append(GTK_BOX(brightness_content), GTK_WIDGET(self->brightness_value_label));
+
     AdwActionRow *brightness_row = ADW_ACTION_ROW(adw_action_row_new());
-    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(brightness_row), "Brightness");
-    adw_action_row_add_suffix(brightness_row, GTK_WIDGET(self->brightness_scale));
+    gtk_widget_add_css_class(GTK_WIDGET(brightness_row), "flat");
+    adw_action_row_add_suffix(brightness_row, brightness_content);
     gtk_widget_set_hexpand(GTK_WIDGET(brightness_row), TRUE);
 
     GtkWidget *controls_group = adw_preferences_group_new();
@@ -239,9 +311,11 @@ static void app_window_show_monitor(AppWindow *self, MonitorItem *item) {
     }
 
     self->updating_slider = TRUE;
-    gtk_range_set_range(GTK_RANGE(self->brightness_scale), 0, maximum);
+    self->brightness_max = maximum > 0 ? maximum : 100;
+    gtk_range_set_range(GTK_RANGE(self->brightness_scale), 0, self->brightness_max);
     gtk_range_set_value(GTK_RANGE(self->brightness_scale), current);
     self->updating_slider = FALSE;
+    app_window_update_brightness_label(self, current);
 }
 
 static void app_window_refresh(AppWindow *self) {
@@ -291,12 +365,21 @@ static AppWindow *app_window_new(GtkApplication *app) {
     gtk_single_selection_set_autoselect(self->selection, TRUE);
     gtk_single_selection_set_can_unselect(self->selection, FALSE);
     g_signal_connect(self->selection, "notify::selected-item", G_CALLBACK(on_selection_changed), self);
+    self->brightness_max = 100;
 
     GtkWidget *toolbar_view = adw_toolbar_view_new();
     GtkWidget *header_bar = adw_header_bar_new();
-    GtkWidget *title = gtk_label_new("Displays");
-    gtk_widget_add_css_class(title, "title-1");
-    adw_header_bar_set_title_widget(ADW_HEADER_BAR(header_bar), title);
+
+    GtkWidget *title_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_set_hexpand(title_box, TRUE);
+
+    GtkWidget *page_title = gtk_label_new("Displays");
+    gtk_widget_add_css_class(page_title, "title-4");
+    gtk_widget_set_halign(page_title, GTK_ALIGN_END);
+    gtk_widget_set_margin_end(page_title, 6);
+    gtk_box_append(GTK_BOX(title_box), page_title);
+
+    adw_header_bar_set_title_widget(ADW_HEADER_BAR(header_bar), title_box);
 
     self->refresh_button = GTK_BUTTON(gtk_button_new_from_icon_name("view-refresh-symbolic"));
     gtk_widget_set_tooltip_text(GTK_WIDGET(self->refresh_button), "Re-detect connected monitors");
@@ -308,7 +391,7 @@ static AppWindow *app_window_new(GtkApplication *app) {
     GtkWidget *split_view = adw_navigation_split_view_new();
     adw_navigation_split_view_set_sidebar_width_fraction(ADW_NAVIGATION_SPLIT_VIEW(split_view), 0.28);
 
-    AdwNavigationPage *sidebar_page = adw_navigation_page_new(build_list_view(self), "Displays");
+    AdwNavigationPage *sidebar_page = adw_navigation_page_new(build_sidebar(self), "Displays");
     adw_navigation_split_view_set_sidebar(ADW_NAVIGATION_SPLIT_VIEW(split_view), sidebar_page);
 
     self->content_stack = GTK_STACK(gtk_stack_new());

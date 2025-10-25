@@ -14,6 +14,8 @@ packaging guidelines.
 
 ## Build requirements
 
+### Fedora
+
 The following packages are required to build and run GnomeDDC on Fedora:
 
 - `cmake`
@@ -23,12 +25,32 @@ The following packages are required to build and run GnomeDDC on Fedora:
 - `libadwaita-devel`
 - `ddcutil` (runtime dependency)
 
+### Debian / Ubuntu
+
+The project also builds cleanly on Debian-based distributions with the
+following packages installed:
+
+- `build-essential`
+- `cmake`
+- `pkg-config`
+- `libgtk-4-dev`
+- `libadwaita-1-dev`
+- `libddcutil-dev`
+
 ## Building and running
 
 ```bash
 cmake -S . -B build
 cmake --build build
+make -C build
 ./build/gnomeddc
+```
+
+On systems without an available display server (such as continuous
+integration runners) you can still verify the binary launches by running:
+
+```bash
+./build/gnomeddc --help
 ```
 
 GnomeDDC communicates with `ddcutil`, so make sure your user is allowed to access
