@@ -29,7 +29,6 @@ static void app_window_update_brightness_label(AppWindow *self, gdouble value);
 static void on_prefer_dark_changed(GObject *settings, GParamSpec *pspec, gpointer user_data);
 static void update_color_scheme(AdwApplication *app);
 static void ensure_app_styles(void);
-static gboolean color_scheme_watched = FALSE;
 
 static void app_window_free(AppWindow *self) {
     if (!self) {
@@ -47,8 +46,8 @@ static void on_refresh_clicked(GtkButton *button, gpointer user_data) {
 
 static void on_selection_changed(GObject *selection, GParamSpec *pspec, gpointer user_data) {
     AppWindow *self = user_data;
-    guint position = gtk_single_selection_get_selected(self->selection);
-    if (position == GTK_INVALID_LIST_POSITION) {
+    GObject *selected = gtk_single_selection_get_selected_item(self->selection);
+    if (!selected) {
         adw_status_page_set_icon_name(self->status_page, "computer-symbolic");
         adw_status_page_set_title(self->status_page, "No monitor selected");
         adw_status_page_set_description(self->status_page, "Choose a display from the sidebar to adjust its brightness.");
@@ -56,13 +55,9 @@ static void on_selection_changed(GObject *selection, GParamSpec *pspec, gpointer
         return;
     }
 
-    g_autoptr(GObject) selected = g_list_model_get_item(G_LIST_MODEL(self->monitor_store), position);
-    if (!selected) {
-        return;
-    }
-
     MonitorItem *item = MONITOR_ITEM(selected);
     app_window_show_monitor(self, item);
+    g_object_unref(selected);
 }
 
 static void app_window_set_feedback(AppWindow *self, const gchar *message) {
@@ -97,12 +92,7 @@ static void on_brightness_value_changed(GtkRange *range, gpointer user_data) {
         return;
     }
 
-    guint position = gtk_single_selection_get_selected(self->selection);
-    if (position == GTK_INVALID_LIST_POSITION) {
-        return;
-    }
-
-    g_autoptr(GObject) selected = g_list_model_get_item(G_LIST_MODEL(self->monitor_store), position);
+    GObject *selected = gtk_single_selection_get_selected_item(self->selection);
     if (!selected) {
         return;
     }
@@ -123,6 +113,8 @@ static void on_brightness_value_changed(GtkRange *range, gpointer user_data) {
         app_window_set_feedback(self, message);
         g_free(message);
     }
+
+    g_object_unref(selected);
 }
 
 static void on_list_item_setup(GtkSignalListItemFactory *factory, GtkListItem *item, gpointer user_data) {
@@ -237,16 +229,14 @@ static GtkWidget *build_detail_panel(AppWindow *self) {
 
     self->brightness_value_label = GTK_LABEL(gtk_label_new("0%"));
     gtk_widget_add_css_class(GTK_WIDGET(self->brightness_value_label), "dim-label");
+    gtk_widget_add_css_class(GTK_WIDGET(self->brightness_value_label), "gnomeddc-brightness-value");
     gtk_widget_set_valign(GTK_WIDGET(self->brightness_value_label), GTK_ALIGN_CENTER);
     gtk_widget_set_halign(GTK_WIDGET(self->brightness_value_label), GTK_ALIGN_END);
-    gtk_label_set_xalign(self->brightness_value_label, 1.0f);
-    gtk_label_set_width_chars(self->brightness_value_label, 4);
 
     GtkWidget *brightness_suffix = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_widget_add_css_class(brightness_suffix, "gnomeddc-brightness-suffix");
     gtk_widget_set_hexpand(brightness_suffix, TRUE);
     gtk_widget_set_halign(brightness_suffix, GTK_ALIGN_FILL);
-
-    gtk_widget_set_margin_end(GTK_WIDGET(self->brightness_scale), 8);
 
     gtk_box_append(GTK_BOX(brightness_suffix), GTK_WIDGET(self->brightness_scale));
     gtk_box_append(GTK_BOX(brightness_suffix), GTK_WIDGET(self->brightness_value_label));
@@ -437,17 +427,6 @@ static AppWindow *app_window_new(GtkApplication *app) {
 static void on_activate(GtkApplication *app, gpointer user_data) {
     AppWindow *window_state = app_window_new(app);
     app_window_refresh(window_state);
-    GtkSettings *settings = gtk_settings_get_default();
-    if (settings) {
-        if (!color_scheme_watched) {
-            g_signal_connect(settings,
-                             "notify::gtk-application-prefer-dark-theme",
-                             G_CALLBACK(on_prefer_dark_changed),
-                             app);
-            color_scheme_watched = TRUE;
-        }
-        update_color_scheme(ADW_APPLICATION(app));
-    }
     gtk_window_present(GTK_WINDOW(window_state->window));
 }
 
@@ -491,6 +470,16 @@ static void ensure_app_styles(void) {
             "}"
             ".gnomeddc-window .gnomeddc-page-title {"
             "  font-weight: 600;"
+            "}"
+            ".gnomeddc-window .gnomeddc-brightness-suffix {"
+            "  min-width: 320px;"
+            "}"
+            ".gnomeddc-window .gnomeddc-brightness-suffix scale {"
+            "  margin-inline-end: 8px;"
+            "}"
+            ".gnomeddc-window .gnomeddc-brightness-value {"
+            "  min-width: 3em;"
+            "  text-align: right;"
             "}";
 
         GtkCssProvider *provider = gtk_css_provider_new();
@@ -507,6 +496,11 @@ static void ensure_app_styles(void) {
 
 int main(int argc, char *argv[]) {
     g_autoptr(AdwApplication) app = adw_application_new("dev.gnomeddc", G_APPLICATION_DEFAULT_FLAGS);
+    update_color_scheme(app);
+    GtkSettings *settings = gtk_settings_get_default();
+    if (settings) {
+        g_signal_connect(settings, "notify::gtk-application-prefer-dark-theme", G_CALLBACK(on_prefer_dark_changed), app);
+    }
     g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
     return g_application_run(G_APPLICATION(app), argc, argv);
 }
