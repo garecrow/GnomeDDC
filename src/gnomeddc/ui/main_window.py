@@ -197,7 +197,9 @@ class MainWindow(Adw.ApplicationWindow):
         split_view.set_sidebar(sidebar_page)
 
         self._stack = Adw.NavigationView()
-        split_view.set_content(self._stack)
+        content_page = Adw.NavigationPage(title="Details")
+        content_page.set_child(self._stack)
+        split_view.set_content(content_page)
 
         header_bar = Adw.HeaderBar()
         self.set_titlebar(header_bar)
