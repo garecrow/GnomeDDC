@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="adw" version="1.5"/>
+  <template class="MonitorFeaturePage" parent="Adw.Bin">
+    <child>
+      <object class="Adw.PreferencesPage" id="preferences_page">
+        <property name="title" translatable="yes">Monitor Controls</property>
+        <property name="description" translatable="yes">Adjust live monitor settings provided by ddcutil-service.</property>
+        <child>
+          <object class="Adw.PreferencesGroup" id="identity_group">
+            <property name="title" translatable="yes">Display information</property>
+            <child>
+              <object class="Adw.ActionRow" id="model_row">
+                <property name="title" translatable="yes">Model</property>
+                <property name="subtitle" translatable="yes">Unknown</property>
+              </object>
+            </child>
+            <child>
+              <object class="Adw.ActionRow" id="serial_row">
+                <property name="title" translatable="yes">Serial number</property>
+                <property name="subtitle" translatable="yes">—</property>
+              </object>
+            </child>
+            <child>
+              <object class="Adw.ActionRow" id="capabilities_row">
+                <property name="title" translatable="yes">Capabilities</property>
+                <property name="subtitle" translatable="yes">—</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="Adw.PreferencesGroup" id="luminance_group">
+            <property name="title" translatable="yes">Luminance</property>
+          </object>
+        </child>
+        <child>
+          <object class="Adw.PreferencesGroup" id="picture_group">
+            <property name="title" translatable="yes">Picture</property>
+          </object>
+        </child>
+        <child>
+          <object class="Adw.PreferencesGroup" id="color_group">
+            <property name="title" translatable="yes">Color</property>
+          </object>
+        </child>
+        <child>
+          <object class="Adw.PreferencesGroup" id="advanced_group">
+            <property name="title" translatable="yes">Advanced features</property>
+            <property name="description" translatable="yes">All supported DDC/CI controls exposed by ddcutil-service.</property>
+            <child>
+              <object class="Adw.ExpanderRow" id="feature_table_row">
+                <property name="title" translatable="yes">Feature explorer</property>
+                <property name="subtitle" translatable="yes">Inspect and tweak every exposed control.</property>
+                <child>
+                  <object class="Gtk.ScrolledWindow">
+                    <property name="min-content-height">220</property>
+                    <property name="hscrollbar-policy">never</property>
+                    <child>
+                      <object class="Gtk.ListBox" id="feature_list">
+                        <property name="selection-mode">none</property>
+                        <style>
+                          <class name="boxed-list"/>
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

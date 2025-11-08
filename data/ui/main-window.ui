@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="adw" version="1.5"/>
+  <template class="GnomeDdcWindow" parent="Adw.ApplicationWindow">
+    <property name="default-width">960</property>
+    <property name="default-height">640</property>
+    <property name="application">app</property>
+    <child>
+      <object class="Adw.ToolbarView" id="toolbar_view">
+        <child type="top">
+          <object class="Adw.HeaderBar" id="header_bar">
+            <property name="show-end-title-buttons">True</property>
+            <child type="title">
+              <object class="Adw.WindowTitle" id="window_title">
+                <property name="title">Gnome DDC</property>
+              </object>
+            </child>
+            <child type="end">
+              <object class="Gtk.Button" id="refresh_button">
+                <property name="icon-name">view-refresh-symbolic</property>
+                <property name="tooltip-text" translatable="yes">Refresh monitors</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <property name="content">
+          <object class="Adw.ToastOverlay" id="toast_overlay">
+            <property name="child">
+              <object class="Adw.NavigationSplitView" id="split_view">
+                <property name="max-sidebar-width">320</property>
+                <property name="show-sidebar">True</property>
+                <property name="sidebar">
+                  <object class="Adw.NavigationPage" id="sidebar_page">
+                    <property name="title" translatable="yes">Displays</property>
+                    <property name="child">
+                      <object class="Gtk.Box">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">12</property>
+                        <property name="margin-start">12</property>
+                        <property name="margin-end">12</property>
+                        <property name="margin-top">12</property>
+                        <property name="margin-bottom">12</property>
+                        <child>
+                          <object class="Gtk.SearchEntry" id="search_entry">
+                            <property name="placeholder-text" translatable="yes">Search displays</property>
+                            <property name="activates-default">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="Gtk.ScrolledWindow">
+                            <property name="vexpand">True</property>
+                            <property name="hscrollbar-policy">never</property>
+                            <child>
+                              <object class="Gtk.ListBox" id="monitor_list">
+                                <property name="selection-mode">single</property>
+                                <style>
+                                  <class name="navigation-sidebar"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </property>
+                <property name="content">
+                  <object class="Adw.NavigationPage" id="content_page">
+                    <property name="title" translatable="yes">Details</property>
+                    <property name="child">
+                      <object class="Adw.Clamp">
+                        <property name="maximum-size">720</property>
+                        <property name="tightening-threshold">560</property>
+                        <property name="child">
+                          <object class="Adw.ViewStack" id="content_stack">
+                            <child>
+                              <object class="Adw.StatusPage" id="loading_page">
+                                <property name="title" translatable="yes">Looking for displays</property>
+                                <property name="description" translatable="yes">Make sure ddcutil-service is running and your monitors are connected.</property>
+                                <property name="icon-name">video-display-symbolic</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="Adw.StatusPage" id="empty_page">
+                                <property name="title" translatable="yes">No supported displays found</property>
+                                <property name="description" translatable="yes">Connect a monitor that supports DDC/CI or start ddcutil-service.</property>
+                                <property name="icon-name">video-display-symbolic</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                  </object>
+                </property>
+              </object>
+            </property>
+          </object>
+        </property>
+      </object>
+    </child>
+  </template>
+</interface>
