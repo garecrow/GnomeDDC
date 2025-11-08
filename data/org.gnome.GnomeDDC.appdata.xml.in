@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>org.gnome.GnomeDDC</id>
+  <name>GnomeDDC</name>
+  <summary>Control monitors with ddcutil-service</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>GnomeDDC is a modern GNOME application built with libadwaita that exposes every feature provided by ddcutil-service, enabling fine-grained monitor configuration including luminance, color, power, and input management.</p>
+  </description>
+  <launchable type="desktop-id">org.gnome.GnomeDDC.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://example.com/screenshots/gnomeddc-main.png</image>
+    </screenshot>
+  </screenshots>
+  <provides>
+    <control>ddcutil</control>
+  </provides>
+  <releases>
+    <release version="0.1.0" date="2024-01-01">
+      <description>
+        <p>Initial release.</p>
+      </description>
+    </release>
+  </releases>
+</component>
