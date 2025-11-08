@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=GnomeDDC
+Comment=Control DDC/CI monitors with a Libadwaita interface
+Exec=gnomeddc
+Icon=org.gnomeddc.App
+Type=Application
+Categories=GTK;GNOME;Utility;
+StartupNotify=true
