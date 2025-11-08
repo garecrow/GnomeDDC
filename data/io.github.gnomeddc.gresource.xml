@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<gresources>
-  <gresource prefix="/io/github/gnomeddc">
-    <file>ui/main-window.ui</file>
-    <file>ui/feature-page.ui</file>
-    <file>ui/monitor-row.ui</file>
-    <file>styles/gnomeddc.css</file>
-  </gresource>
-</gresources>
