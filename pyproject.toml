@@ -1,0 +1,20 @@
+[project]
+name = "gnomeddc"
+version = "0.1.0"
+description = "GTK4 Libadwaita UI for ddcutil-service"
+authors = [
+  { name = "GnomeDDC Contributors" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "PyGObject>=3.44",
+  "pycairo>=1.21",
+]
+
+[project.scripts]
+gnomeddc = "gnomeddc.app:main"
+
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
