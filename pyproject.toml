@@ -1,0 +1,24 @@
+[project]
+name = "gnomeddc"
+version = "0.1.0"
+description = "GNOME Adwaita client for ddcutil-service"
+readme = "README.md"
+authors = [
+  { name = "GnomeDDC" }
+]
+requires-python = ">=3.11"
+dependencies = [
+  "PyGObject>=3.46",
+  "dbus-next>=0.2.3",
+  "pyxdg>=0.28"
+]
+
+[project.scripts]
+gnomeddc = "gnomeddc.__main__:main"
+
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

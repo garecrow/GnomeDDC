@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>org.gnomeddc.App</id>
+  <name>GnomeDDC</name>
+  <summary>Adjust DDC/CI monitors using a Libadwaita interface</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>GnomeDDC is a GNOME application for managing external monitors that expose DDC/CI capabilities through ddcutil-service. It listens for hotplug, capability, and value-changed signals to keep the UI responsive and accurate, while surfacing developer options for raw values, write verification, and sleep multipliers.</p>
+  </description>
+  <url type="homepage">https://example.org/gnomeddc</url>
+  <provides>
+    <binary>gnomeddc</binary>
+  </provides>
+  <releases>
+    <release version="0.1.0" date="2024-05-16"/>
+  </releases>
+</component>
