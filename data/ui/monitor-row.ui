@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="adw" version="1.5"/>
+  <template class="MonitorRow" parent="Adw.ActionRow">
+    <property name="title">Display</property>
+    <property name="subtitle">Unknown</property>
+    <child>
+      <object class="Gtk.Image">
+        <property name="icon-name">video-display-symbolic</property>
+        <property name="pixel-size">24</property>
+      </object>
+    </child>
+  </template>
+</interface>

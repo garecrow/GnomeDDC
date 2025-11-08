@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Gnome DDC
+Comment=Control external monitors via ddcutil-service
+Exec=gnomeddc
+Icon=io.github.gnomeddc
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+StartupNotify=true
