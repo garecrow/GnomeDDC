@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.14"/>
+  <requires lib="adw" version="1.6"/>
+  <template class="GnomeDDCWindow" parent="AdwApplicationWindow">
+    <property name="default-width">920</property>
+    <property name="default-height">640</property>
+    <property name="title" translatable="yes">GnomeDDC</property>
+    <child>
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+            <property name="title-widget">
+              <object class="AdwWindowTitle">
+                <property name="title" translatable="yes">Display Controls</property>
+                <property name="subtitle" translatable="yes">Manage external monitors</property>
+              </object>
+            </property>
+            <child type="end">
+              <object class="GtkButton" id="refresh_button">
+                <property name="icon-name">view-refresh-symbolic</property>
+                <property name="tooltip-text" translatable="yes">Refresh monitors</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <property name="content">
+          <object class="AdwNavigationSplitView" id="split_view">
+            <property name="collapsed">False</property>
+            <property name="show-content">True</property>
+            <child type="sidebar">
+              <object class="AdwNavigationPage">
+                <property name="title" translatable="yes">Displays</property>
+                <property name="child">
+                  <object class="AdwClamp">
+                    <property name="maximum-size">480</property>
+                    <property name="tightening-threshold">360</property>
+                    <child>
+                      <object class="AdwPreferencesPage">
+                        <child>
+                          <object class="AdwPreferencesGroup">
+                            <property name="title" translatable="yes">Connected monitors</property>
+                            <child>
+                              <object class="GtkScrolledWindow">
+                                <property name="hexpand">True</property>
+                                <property name="vexpand">True</property>
+                                <property name="has-frame">False</property>
+                                <child>
+                                  <object class="GtkListView" id="monitor_list">
+                                    <property name="single-click-activate">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child type="content">
+              <object class="AdwNavigationPage" id="details_page">
+                <property name="title" translatable="yes">Monitor details</property>
+                <property name="child">
+                  <object class="AdwToolbarView" id="detail_view">
+                    <property name="content">
+                      <object class="AdwStatusPage" id="empty_state">
+                        <property name="icon-name">video-display-symbolic</property>
+                        <property name="title" translatable="yes">Select a monitor</property>
+                        <property name="description" translatable="yes">Choose a monitor from the list to inspect and adjust its capabilities.</property>
+                      </object>
+                    </property>
+                  </object>
+                </property>
+              </object>
+            </child>
+          </object>
+        </property>
+      </object>
+    </child>
+  </template>
+</interface>

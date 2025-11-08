@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.14"/>
+  <template class="GnomeDDCMonitorRow" parent="AdwActionRow">
+    <property name="activatable">True</property>
+    <property name="title" translatable="yes">Monitor</property>
+    <property name="subtitle" translatable="yes">Vendor • Model</property>
+    <child type="suffix">
+      <object class="GtkLabel" id="status_label">
+        <property name="visible">False</property>
+        <style>
+          <class name="dim-label"/>
+        </style>
+      </object>
+    </child>
+  </template>
+</interface>

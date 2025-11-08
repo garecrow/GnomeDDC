@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.14"/>
+  <template class="GnomeDDCFeatureToggle" parent="AdwActionRow">
+    <property name="title" translatable="yes">Toggle</property>
+    <child type="suffix">
+      <object class="GtkSwitch" id="switch">
+        <property name="valign">center</property>
+      </object>
+    </child>
+  </template>
+</interface>
