@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="adw" version="1.4"/>
+  <template class="GnomeDdcWindow" parent="AdwApplicationWindow">
+    <property name="default-width">1200</property>
+    <property name="default-height">720</property>
+    <child>
+      <object class="AdwToastOverlay" id="toast_overlay">
+        <child>
+          <object class="AdwToolbarView">
+            <child type="top">
+              <object class="AdwHeaderBar">
+                <property name="title-widget">
+                  <object class="AdwViewSwitcherTitle" id="view_switcher_title">
+                    <property name="stack">view_stack</property>
+                  </object>
+                </property>
+                <child type="end">
+                  <object class="GtkSpinner" id="busy_spinner">
+                    <property name="spinning">false</property>
+                    <property name="visible">false</property>
+                  </object>
+                </child>
+                <child type="end">
+                  <object class="GtkButton" id="refresh_button">
+                    <property name="icon-name">view-refresh-symbolic</property>
+                    <property name="tooltip-text" translatable="yes">Redetect displays</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwNavigationSplitView" id="split_view">
+                <property name="sidebar-width-fraction">0.28</property>
+                <child type="sidebar">
+                  <object class="AdwNavigationPage">
+                    <property name="title" translatable="yes">Displays</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">12</property>
+                        <property name="margin-start">12</property>
+                        <property name="margin-end">12</property>
+                        <property name="margin-top">12</property>
+                        <property name="margin-bottom">12</property>
+                        <child>
+                          <object class="GtkSearchEntry" id="display_search_entry">
+                            <property name="placeholder-text" translatable="yes">Search displays</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkScrolledWindow">
+                            <property name="hexpand">true</property>
+                            <property name="vexpand">true</property>
+                            <property name="min-content-height">200</property>
+                            <child>
+                              <object class="GtkListView" id="display_list"/>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwStatusPage" id="empty_status">
+                            <property name="icon-name">display-symbolic</property>
+                            <property name="title" translatable="yes">No displays</property>
+                            <property name="description" translatable="yes">Connect a monitor or run detection to begin.</property>
+                            <property name="visible">false</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="content">
+                  <object class="AdwNavigationPage">
+                    <property name="title" translatable="yes">Details</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="AdwViewSwitcherBar" id="view_switcher_bar">
+                            <property name="stack">view_stack</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwViewStack" id="view_stack">
+                            <property name="hexpand">true</property>
+                            <property name="vexpand">true</property>
+                            <child>
+                              <object class="AdwPreferencesPage" id="overview_page">
+                                <property name="title" translatable="yes">Overview</property>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="summary_group">
+                                    <property name="title" translatable="yes">Display summary</property>
+                                    <child>
+                                      <object class="AdwActionRow" id="name_row">
+                                        <property name="title" translatable="yes">Name</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="model_row">
+                                        <property name="title" translatable="yes">Model</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="manufacturer_row">
+                                        <property name="title" translatable="yes">Manufacturer</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="serial_row">
+                                        <property name="title" translatable="yes">Serial number</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="product_code_row">
+                                        <property name="title" translatable="yes">Product code</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="display_number_row">
+                                        <property name="title" translatable="yes">Display number</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="usb_row">
+                                        <property name="title" translatable="yes">USB address</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="state_group">
+                                    <property name="title" translatable="yes">Current state</property>
+                                    <child>
+                                      <object class="AdwActionRow" id="state_row">
+                                        <property name="title" translatable="yes">Status</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="query_state_button">
+                                            <property name="label" translatable="yes">Refresh</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="sleep_multiplier_row">
+                                        <property name="title" translatable="yes">Sleep multiplier</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="sleep_multiplier_refresh_button">
+                                            <property name="label" translatable="yes">Refresh</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="detection_group">
+                                    <property name="title" translatable="yes">Detection</property>
+                                    <child>
+                                      <object class="AdwActionRow" id="list_detected_row">
+                                        <property name="title" translatable="yes">Update list</property>
+                                        <property name="subtitle" translatable="yes">Query the current list of detected displays.</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="list_detected_button">
+                                            <property name="label" translatable="yes">List</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="detect_row">
+                                        <property name="title" translatable="yes">Redetect</property>
+                                        <property name="subtitle" translatable="yes">Perform a fresh detection of connected displays.</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="detect_button">
+                                            <property name="label" translatable="yes">Detect</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwPreferencesPage" id="vcp_page">
+                                <property name="title" translatable="yes">Monitor controls</property>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="vcp_read_group">
+                                    <property name="title" translatable="yes">Read values</property>
+                                    <child>
+                                      <object class="AdwEntryRow" id="vcp_code_entry">
+                                        <property name="title" translatable="yes">VCP code</property>
+                                        <property name="show-apply-button">true</property>
+                                        <property name="input-purpose">number</property>
+                                        <property name="placeholder-text" translatable="yes">e.g. 0x10</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwEntryRow" id="vcp_flags_entry">
+                                        <property name="title" translatable="yes">Flags</property>
+                                        <property name="placeholder-text">0</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="get_vcp_row">
+                                        <property name="title" translatable="yes">Get VCP</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="get_vcp_button">
+                                            <property name="label" translatable="yes">Query</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwEntryRow" id="multiple_vcp_codes_entry">
+                                        <property name="title" translatable="yes">VCP codes</property>
+                                        <property name="placeholder-text" translatable="yes">0x10,0x12</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="get_multiple_vcp_row">
+                                        <property name="title" translatable="yes">Get multiple VCP</property>
+                                        <property name="subtitle" translatable="yes">Comma-separated list of codes</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="get_multiple_vcp_button">
+                                            <property name="label" translatable="yes">Query</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="vcp_write_group">
+                                    <property name="title" translatable="yes">Write values</property>
+                                    <child>
+                                      <object class="AdwEntryRow" id="set_vcp_value_entry">
+                                        <property name="title" translatable="yes">Value</property>
+                                        <property name="placeholder-text">0</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwEntryRow" id="set_vcp_flags_entry">
+                                        <property name="title" translatable="yes">Flags</property>
+                                        <property name="placeholder-text">0</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="set_vcp_row">
+                                        <property name="title" translatable="yes">Set VCP</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="set_vcp_button">
+                                            <property name="label" translatable="yes">Apply</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwEntryRow" id="set_vcp_context_entry">
+                                        <property name="title" translatable="yes">Client context</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="set_vcp_context_row">
+                                        <property name="title" translatable="yes">Set VCP with context</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="set_vcp_context_button">
+                                            <property name="label" translatable="yes">Apply</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="metadata_group">
+                                    <property name="title" translatable="yes">Metadata</property>
+                                    <child>
+                                      <object class="AdwActionRow" id="get_vcp_metadata_row">
+                                        <property name="title" translatable="yes">Get VCP metadata</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="get_vcp_metadata_button">
+                                            <property name="label" translatable="yes">Query</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="get_capabilities_row">
+                                        <property name="title" translatable="yes">Get capabilities</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="get_capabilities_button">
+                                            <property name="label" translatable="yes">Fetch</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="get_capabilities_metadata_row">
+                                        <property name="title" translatable="yes">Get parsed capabilities</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="get_capabilities_metadata_button">
+                                            <property name="label" translatable="yes">Fetch</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="sleep_group">
+                                    <property name="title" translatable="yes">Sleep multiplier</property>
+                                    <child>
+                                      <object class="AdwEntryRow" id="sleep_multiplier_entry">
+                                        <property name="title" translatable="yes">New multiplier</property>
+                                        <property name="placeholder-text">1.0</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="set_sleep_multiplier_row">
+                                        <property name="title" translatable="yes">Set multiplier</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="set_sleep_multiplier_button">
+                                            <property name="label" translatable="yes">Apply</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwPreferencesPage" id="service_page">
+                                <property name="title" translatable="yes">Service</property>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="service_info_group">
+                                    <property name="title" translatable="yes">Service information</property>
+                                    <child>
+                                      <object class="AdwActionRow" id="service_version_row">
+                                        <property name="title" translatable="yes">Interface version</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="ddcutil_version_row">
+                                        <property name="title" translatable="yes">ddcutil version</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="service_parameters_locked_row">
+                                        <property name="title" translatable="yes">Parameters locked</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="service_flags_group">
+                                    <property name="title" translatable="yes">Flags and status</property>
+                                    <child>
+                                      <object class="AdwActionRow" id="attributes_row">
+                                        <property name="title" translatable="yes">Attributes returned by detect</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="status_values_row">
+                                        <property name="title" translatable="yes">Status values</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="display_event_types_row">
+                                        <property name="title" translatable="yes">Display event types</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="flag_options_row">
+                                        <property name="title" translatable="yes">Service flag options</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="service_settings_group">
+                                    <property name="title" translatable="yes">Settings</property>
+                                    <child>
+                                      <object class="AdwSwitchRow" id="dynamic_sleep_row">
+                                        <property name="title" translatable="yes">Dynamic sleep</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwSwitchRow" id="info_logging_row">
+                                        <property name="title" translatable="yes">Info logging</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwSwitchRow" id="connectivity_signals_row">
+                                        <property name="title" translatable="yes">Emit connectivity signals</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwSpinRow" id="output_level_row">
+                                        <property name="title" translatable="yes">Output level</property>
+                                        <property name="adjustment">
+                                          <object class="GtkAdjustment" id="output_level_adjustment">
+                                            <property name="lower">0</property>
+                                            <property name="upper">7</property>
+                                            <property name="step-increment">1</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwSpinRow" id="poll_interval_row">
+                                        <property name="title" translatable="yes">Poll interval (s)</property>
+                                        <property name="adjustment">
+                                          <object class="GtkAdjustment" id="poll_interval_adjustment">
+                                            <property name="lower">1</property>
+                                            <property name="upper">600</property>
+                                            <property name="step-increment">1</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwSpinRow" id="poll_cascade_row">
+                                        <property name="title" translatable="yes">Poll cascade interval (s)</property>
+                                        <property name="adjustment">
+                                          <object class="GtkAdjustment" id="poll_cascade_adjustment">
+                                            <property name="lower">0.1</property>
+                                            <property name="upper">60</property>
+                                            <property name="step-increment">0.1</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwPreferencesGroup" id="restart_group">
+                                    <property name="title" translatable="yes">Restart service</property>
+                                    <child>
+                                      <object class="AdwEntryRow" id="restart_options_entry">
+                                        <property name="title" translatable="yes">Text options</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwSpinRow" id="restart_syslog_row">
+                                        <property name="title" translatable="yes">Syslog level</property>
+                                        <property name="adjustment">
+                                          <object class="GtkAdjustment" id="restart_syslog_adjustment">
+                                            <property name="lower">0</property>
+                                            <property name="upper">7</property>
+                                            <property name="step-increment">1</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwSpinRow" id="restart_flags_row">
+                                        <property name="title" translatable="yes">Flags</property>
+                                        <property name="adjustment">
+                                          <object class="GtkAdjustment" id="restart_flags_adjustment">
+                                            <property name="lower">0</property>
+                                            <property name="upper">65535</property>
+                                            <property name="step-increment">1</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="AdwActionRow" id="restart_row">
+                                        <property name="title" translatable="yes">Restart service</property>
+                                        <child type="suffix">
+                                          <object class="GtkButton" id="restart_button">
+                                            <property name="label" translatable="yes">Restart</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
