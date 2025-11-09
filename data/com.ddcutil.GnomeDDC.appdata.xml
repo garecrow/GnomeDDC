@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>com.ddcutil.GnomeDDC</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>GNOME DDC Control</name>
+  <summary>Control external displays through ddcutil-service</summary>
+  <description>
+    <p>GNOME DDC Control provides a modern GNOME interface for the ddcutil-service
+    daemon. Manage detection, capabilities, and monitor settings, and tweak
+    service behaviour directly from the desktop.</p>
+  </description>
+  <provides>
+    <binary>gnomeddc</binary>
+  </provides>
+  <launchable type="desktop-id">com.ddcutil.GnomeDDC.desktop</launchable>
+  <releases>
+    <release version="0.1.0"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>
